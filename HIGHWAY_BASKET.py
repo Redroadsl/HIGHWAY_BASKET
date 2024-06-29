@@ -98,7 +98,7 @@ pygame.key.set_repeat(100,100)
 if pygame.get_init(): logging.debug('Pygame initialized.')
 
 # 导入图片
-imgPath     = './HIWAY_ASSETS/IMAGE/'
+imgPath     = './HIGHWAY_ASSETS/IMAGE/'
 img_title   = pygame.image.load(imgPath+'TITLE.png'     ).convert_alpha()
 img_highway = pygame.image.load(imgPath+'HighWAY!.png'  ).convert_alpha()
 img_ball    = pygame.image.load(imgPath+'BALL.png'      ).convert_alpha()
@@ -115,7 +115,7 @@ img_rocket2 = pygame.image.load(imgPath+'ROCKET2.png'   ).convert_alpha()
 del imgPath
 
 # 导入字体
-fontPath    = './HIWAY_ASSETS/FONTS/'
+fontPath    = './HIGHWAY_ASSETS/FONTS/'
 font_en     = pygame.font.Font(fontPath+'FIXEDSYS.TTF' ,size=12)
 font_en_small=pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=36)
 font_cn     = pygame.font.Font(fontPath+'华文中宋.TTF'  ,size=60)
