@@ -91,6 +91,7 @@ class Obj(object):
         self.y = (_.height-self.height)//2
 
 # 初始化
+pygame.mixer.pre_init(44100,-16,2,512)
 pygame.init()
 pygame.display.set_caption('HIGHWAY BASKET','HIGHWAY BASKET')
 screen=pygame.display.set_mode((_.width,_.height),RESIZABLE|DOUBLEBUF|HWSURFACE)#SCALED|FULLSCREEN
@@ -112,6 +113,7 @@ img_bg04    = pygame.image.load(imgPath+'BG04.png'      ).convert_alpha()
 img_bg05    = pygame.image.load(imgPath+'BG05.png'      ).convert_alpha()
 img_rocket1 = pygame.image.load(imgPath+'ROCKET1.png'   ).convert_alpha()
 img_rocket2 = pygame.image.load(imgPath+'ROCKET2.png'   ).convert_alpha()
+img_enemy   = pygame.image.load(imgPath+'ENEMY.png'     ).convert_alpha()
 del imgPath
 
 # 导入字体
@@ -123,6 +125,12 @@ font_cn_big = pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=72)
 fontHeight_en=font_en.get_height()
 fontHeight_cn=font_cn.get_height()
 del fontPath
+
+# 导入音频
+pygame.mixer.init()
+sePath='./HIGHWAY_ASSETS/AUDIO/'
+se_exam=pygame.mixer.Sound(sePath+'EXAM.WAV')
+se_tada=pygame.mixer.Sound(sePath+'TADA.WAV')
 
 # 方便函数
 def inRect(x,y,ax,ay,bx,by):
@@ -550,6 +558,23 @@ animate.init(\
 ######## MAIN GAME ########
 ###########################
 
+class EnemyBall(Obj):
+    def __init__(self):
+        self.item = img_enemy
+        super().__init__(self.item,screen)
+        self.speed=random.randint(1,2)
+    def update(self):
+        self.y += self.speed
+
+class EnemyList(list):
+    def add(self,item,num=10):
+        for i in range(num): self.append(item)
+    def update(self):
+        for i in self:
+            i.update()
+######################
+######## LOOP ########
+######################
 def VideoResized():
     _.changeScreenSize()
     title.update_videoResized()
