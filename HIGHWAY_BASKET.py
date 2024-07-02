@@ -355,9 +355,9 @@ class Animate(object):
                 else:
                     self.an.pop(an)
                     self.play()
-                    return True
+                    return
             else:
-                return 0
+                return None
         return False
     def pause(self):
         '创建等待点击事件（动画列表里调用）'
@@ -562,16 +562,29 @@ class EnemyBall(Obj):
     def __init__(self):
         self.item = img_enemy
         super().__init__(self.item,screen)
-        self.speed=random.randint(1,2)
+        self.speed = random.randint(1,2)
     def update(self):
         self.y += self.speed
+
+class EnemyBasket(Obj):
+    def __init__(self):
+        self.item = img_enemy
+        super().__init__(self.item,screen)
+        self.speed = random.randint(1,2)
+        self.x = _.width
+    def update(self):
+        self.x -= self.speed
 
 class EnemyList(list):
     def add(self,item,num=10):
         for i in range(num): self.append(item)
+        return self
     def update(self):
-        for i in self:
-            i.update()
+        for i in self: i.update()
+    def display(self):
+        for i in self: i.display()
+enballs = EnemyList().add(EnemyBall(),10)
+enbasks = EnemyList().add(EnemyBasket(),10)
 ######################
 ######## LOOP ########
 ######################
@@ -669,6 +682,7 @@ while _.run:
             elif event.type==MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_RETURN):
                 pass
         screen.fill((0,0,0))
+        enballs.display()
         pygame.display.flip()
         _.tick()
     ######## EXAMINATION ########
