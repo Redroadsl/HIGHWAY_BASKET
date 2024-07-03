@@ -57,7 +57,7 @@ class _():
     speed = 10 #动画速度的除数
     run   = True
     clock = pygame.time.Clock()
-    state = 1 # 0:exit  1:title  2:about  3:beforeGame 4:game 5:exam 6:final
+    state = 4 # 0:exit  1:title  2:about  3:beforeGame 4:game 5:exam 6:final
     def tick():
         _.clock.tick(_.fps)
     def stop():
@@ -563,6 +563,7 @@ class EnemyBall(Obj):
         self.item = img_enemy
         super().__init__(self.item,screen)
         self.speed = random.randint(1,2)
+        self.x = random.randint(0,_.width)
     def update(self):
         self.y += self.speed
 
@@ -577,14 +578,14 @@ class EnemyBasket(Obj):
 
 class EnemyList(list):
     def add(self,item,num=10):
-        for i in range(num): self.append(item)
+        for i in range(num): self.append(item())
         return self
     def update(self):
         for i in self: i.update()
     def display(self):
         for i in self: i.display()
-enballs = EnemyList().add(EnemyBall(),10)
-enbasks = EnemyList().add(EnemyBasket(),10)
+enballs = EnemyList().add(EnemyBall,10)
+enbasks = EnemyList().add(EnemyBasket,10)
 ######################
 ######## LOOP ########
 ######################
