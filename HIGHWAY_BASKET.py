@@ -4,7 +4,7 @@ Author:         Redroadsl
 LaunchTime:     2024 04 19
 Copyright:      Redroadsl
 UsingLibraries: Pygame;logging;sys;math;time;random;ctypes;os
-Licence:        https://www.mozilla.org/en-US/MPL/2.0/
+Licence:        MIT
 '''
 print(__doc__)
 #   #==========================================================================#
@@ -40,10 +40,12 @@ import logging
 logging.basicConfig(level=logging.NOTSET)
 logging.disable(level=False)
 logging.info('START!')
-import sys,time,math,random,os
+import time,math,random,os
+from sys import exit
 from ctypes import windll
 windll.user32.SetProcessDPIAware()
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT']='1'
+del os
 import pygame
 from pygame.locals import *
 from pygame._sdl2 import messagebox
@@ -75,10 +77,10 @@ class _():
 
 # 对象通用模板
 class Obj(object):
-    def __init__(self,item,screen):
+    def __init__(self,item,screen,x=0,y=0):
         self.item = item
-        self.x = 0
-        self.y = 0
+        self.x = x
+        self.y = y
         self.width = item.get_width()
         self.height = item.get_height()
         self.screen = screen
@@ -94,7 +96,7 @@ class Obj(object):
 pygame.mixer.pre_init(44100,-16,2,512)
 pygame.init()
 pygame.display.set_caption('HIGHWAY BASKET','HIGHWAY BASKET')
-screen=pygame.display.set_mode((_.width,_.height),RESIZABLE|DOUBLEBUF|HWSURFACE)#SCALED|FULLSCREEN
+screen=pygame.display.set_mode((_.width,_.height),RESIZABLE|DOUBLEBUF|HWSURFACE)#|FULLSCREEN)#SCALED|FULLSCREEN
 pygame.key.set_repeat(100,100)
 if pygame.get_init(): logging.debug('Pygame initialized.')
 
@@ -137,7 +139,10 @@ def inRect(x,y,ax,ay,bx,by):
     return True if (ax <= x <= bx and ay <= y <= by) else False
 def inRect2(pos1,pos2,pos3):
     return True if (pos2[0] <= pos1[0] <= pos3[0] and pos2[1] <= pos1[1] <= pos3[1]) else False
-
+def hideMouse():
+    pygame.mouse.set_visible(False)
+def showMouse():
+    pygame.mouse.set_visible(True)
 ################################
 ######## TITLE场合的设置 ########
 ################################
@@ -525,47 +530,99 @@ bSP.init(lines=\
 animate=Animate()
 animate.init(\
 {#(开始，持续)
-(0,0):     'bSP.set_alpha(0),bBG.set_alpha(0)',
-(0,-1):    'bBG.display(),bSP.display()',
-(0,127):   'bSP.fadeIn(step=2)',
-(64,127):  'bBG.fadeIn(step=3)',
-(191,0):   'self.pause(),NEXT.show()',
-(192,0):   'bSP.change(),bBG.hide(),bSP.set_pos(0.5,0.23)',#
-(192,1):   'highway.display(),highway.update()',
-(193,0):   'self.pause(),NEXT.show()',
-(194,0):   'bSP.set_pos(0.5,0.5),bSP.change(),bBG.change(),bBG.set_alpha(0),bBG.unhide()',#
-(195,255): 'bBG.fadeIn(step=1)',
-(450,0):   'self.pause(),NEXT.show()',
-(451,127): 'bBG.fadeOut(step=2),bSP.fadeOut(step=2)',
-(578,0):   'bSP.change(),bBG.change(),bBG.set_alpha(0),bSP.set_alpha(0)',#
-(579,127): 'bSP.fadeIn(step=2)',
-(579,255): 'bBG.fadeIn(step=1)',
-(835,0):   'self.pause(),NEXT.show(),rocket.display(),rocket.update(),rocket.move(x=3,y=4),rocket.rotate(-1)',
-(836,127): 'bBG.fadeOut(step=2)',
-(964,0):   'bSP.change(),bBG.change(),bBG.set_alpha(0)',#
-(965,127): 'bBG.rollscale(sc=1.001)',
-(965,128): 'bBG.fadeIn(step=2)',
-(1094,0):  'self.pause(),NEXT.show()',
-(1095,0):  'bBG.change(),bBG.set_alpha(0),bSP.change()',#
+(0,   0  ):'bSP.set_alpha(0),bBG.set_alpha(0)',
+(0,   -1 ):'bBG.display(),bSP.display()',
+(0,   127):'bSP.fadeIn(step=2)',
+(64,  127):'bBG.fadeIn(step=3)',
+(191, 0  ):'self.pause(),NEXT.show()',
+(192, 0  ):'bSP.change(),bBG.hide(),bSP.set_pos(0.5,0.23)',#
+(192, 1  ):'highway.display(),highway.update()',
+(193, 0  ):'self.pause(),NEXT.show()',
+(194, 0  ):'bSP.set_pos(0.5,0.5),bSP.change(),bBG.change(),bBG.set_alpha(0),bBG.unhide()',#
+(195, 255):'bBG.fadeIn(step=1)',
+(450, 0  ):'self.pause(),NEXT.show()',
+(451, 127):'bBG.fadeOut(step=2),bSP.fadeOut(step=2)',
+(578, 0  ):'bSP.change(),bBG.change(),bBG.set_alpha(0),bSP.set_alpha(0)',#
+(579, 127):'bSP.fadeIn(step=2)',
+(579, 255):'bBG.fadeIn(step=1)',
+(835, 0  ):'self.pause(),NEXT.show(),rocket.display(),rocket.update(),rocket.move(x=3,y=4),rocket.rotate(-1)',
+(836, 127):'bBG.fadeOut(step=2)',
+(964, 0  ):'bSP.change(),bBG.change(),bBG.set_alpha(0)',#
+(965, 127):'bBG.rollscale(sc=1.001)',
+(965, 128):'bBG.fadeIn(step=2)',
+(1094,0  ):'self.pause(),NEXT.show()',
+(1095,0  ):'bBG.change(),bBG.set_alpha(0),bSP.change()',#
 (1095,127):'bBG.fadeIn(step=2)',
-(1223,0):  'self.pause(),NEXT.show()',
+(1223,0  ):'self.pause(),NEXT.show()',
 (1224,127):'bBG.fadeOut(step=2)',
 (1224,255):'bSP.fadeOut(step=1)',
-(1480,0):  '_.state=4'
+(1480,0  ):'hideMouse()',
+(1481,0  ):'_.state=4'
 })
 
 ###########################
 ######## MAIN GAME ########
 ###########################
+# Debug
+if _.state==4:
+    hideMouse()
+# /DEBUG
+gameOffsetX=0
+class GameBG():
+    def __init__(self):
+        self.draw=pygame.surface.Surface((_.width,_.height))
+        self.draw2=pygame.surface.Surface((_.width,_.height),pygame.SRCALPHA)
+        self.draw2.fill((0,0,0,0))
+        self.speed = 2
+        self.speed2= 3
+    def addStar(self):
+        self.draw.set_at((random.randint(0,_.width),self.speed),(200,200,200))
+        self.draw2.set_at((random.randint(0,_.width),self.speed2),(255,255,255))
+    def update(self):
+        self.draw.scroll(dx=0,dy=self.speed)
+        self.draw2.scroll(dx=0,dy=self.speed2)
+        self.addStar()
+    def display(self):
+        screen.blit(self.draw,(0,0))
+        screen.blit(self.draw2,(0,0))
 
+class GameRocket(Obj):
+    def __init__(self):
+        self.fram=0
+        self.items = [pygame.transform.scale(img_rocket1,(138,300)),pygame.transform.scale(img_rocket2,(138,300))]
+        self.item = self.items[0]
+        super().__init__(self.item,screen)
+        self.x = (_.width-self.width)//2
+        self.y = _.height
+    def update(self):
+        self.fram = self.fram+1 if self.fram < 19 else 0
+        self.item = self.items[self.fram // 10]
+        super().__init__(self.item,screen,x=self.x,y=self.y)
+        self.x,self.y = self.x-(self.x-mouseX)//_.speed,self.y-(self.y-mouseY)/_.speed #跟随鼠标
+    def update_fadeIn(self):
+        self.fram = self.fram+1 if self.fram < 19 else 0
+        self.item = self.items[self.fram // 10]
+        super().__init__(self.item, screen, x=self.x, y=self.y-(self.y-(_.height-self.height))/_.speed  )
+        pygame.mouse.set_pos(self.x,self.y)
+    def display(self):
+        screen.blit(self.item,(self.x,self.y))
+
+        
 class EnemyBall(Obj):
     def __init__(self):
-        self.item = img_enemy
+        '随机生成速度不同、大小不同的敌人球'
+        size=random.randint(60,150) 
+        self.item = pygame.transform.scale(img_enemy,(size,size))
         super().__init__(self.item,screen)
-        self.speed = random.randint(1,2)
+        self.speed = random.randint(20,50)/10
         self.x = random.randint(0,_.width)
+        self.y = -random.randint(0,_.height)
+        self.mask = pygame.mask.from_surface(self.item)
+    def check_hit(self,x,y):
+        self.mask.overlap(gameRocket.mask)
     def update(self):
         self.y += self.speed
+        if self.y > _.height: self.__init__()
 
 class EnemyBasket(Obj):
     def __init__(self):
@@ -577,6 +634,7 @@ class EnemyBasket(Obj):
         self.x -= self.speed
 
 class EnemyList(list):
+    '储存敌人的列表，批量操作。'
     def add(self,item,num=10):
         for i in range(num): self.append(item())
         return self
@@ -584,11 +642,19 @@ class EnemyList(list):
         for i in self: i.update()
     def display(self):
         for i in self: i.display()
-enballs = EnemyList().add(EnemyBall,10)
+class GameSys():
+    def __init__():
+        pass
+gameBG = GameBG()
+gameRocket = GameRocket()
+enballs = EnemyList().add(EnemyBall,20)
 enbasks = EnemyList().add(EnemyBasket,10)
-######################
-######## LOOP ########
-######################
+fadeInSurface=pygame.surface.Surface((_.width,_.height)).convert_alpha()
+fadeInSurface.set_alpha(255)
+gameAnTick = 0
+#############################
+######## LOOPPREPARE ########
+#############################
 def VideoResized():
     _.changeScreenSize()
     title.update_videoResized()
@@ -600,7 +666,7 @@ def VideoResized():
     bBG.update_videoResized()
     bSP.update_videoResized()
     NEXT.update_videoResized()
-
+mouseX,mouseY=(0,0)
 # 创建主循环
 while _.run:
     ######## TITLE ########
@@ -666,9 +732,10 @@ while _.run:
     ######## BEFOREGAME ########
     while _.state == 3:
         for event in pygame.event.get():
-            if event.type == QUIT: _.stop()
-            elif event.type==VIDEORESIZE: VideoResized()
-            elif event.type==MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_RETURN):
+            if   event.type == MOUSEMOTION: pass
+            elif event.type == QUIT: _.stop()
+            elif event.type == VIDEORESIZE: VideoResized()
+            elif event.type == MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_RETURN):
                 animate.conti()
         screen.fill((0,0,0))
         animate.play()
@@ -678,14 +745,22 @@ while _.run:
     ######## MAIN GAME ########
     while _.state == 4:
         for event in pygame.event.get():
-            if event.type == QUIT: _.stop()
-            elif event.type==VIDEORESIZE: VideoResized()
-            elif event.type==MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_RETURN):
-                pass
+            if   event.type == MOUSEMOTION: mouseX,mouseY = event.pos
+            elif event.type == QUIT: _.stop()
+            elif event.type == VIDEORESIZE: VideoResized()
+            elif event.type == MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_RETURN): pass
+        if gameAnTick<=120:gameRocket.update_fadeIn()#火箭淡入动画
+        else:gameRocket.update()#非淡入火箭动画
+        gameBG.update()
+        enballs.update()
+        
         screen.fill((0,0,0))
+        gameBG.display()
+        gameRocket.display()
         enballs.display()
         pygame.display.flip()
         _.tick()
+        gameAnTick+=1
     ######## EXAMINATION ########
     while _.state == 5:
         for event in pygame.event.get():
@@ -697,4 +772,4 @@ while _.run:
         pygame.display.flip()
         _.tick()
 pygame.quit()
-sys.exit()
+exit()
