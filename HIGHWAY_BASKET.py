@@ -567,7 +567,8 @@ animate.init(\
 if _.state==4:
     hideMouse()
 # /DEBUG
-gameOffsetX=0
+gameOffsetX=0.5#小动画率
+gameOffsetY=0.5
 class GameBG():
     def __init__(self):
         self.draw=pygame.surface.Surface((_.width,_.height))
@@ -579,12 +580,17 @@ class GameBG():
         self.draw.set_at((random.randint(0,_.width),self.speed),(200,200,200))
         self.draw2.set_at((random.randint(0,_.width),self.speed2),(255,255,255))
     def update(self):
+        #self.speed2=int(3*(gameOffsetY+0.5))
         self.draw.scroll(dx=0,dy=self.speed)
         self.draw2.scroll(dx=0,dy=self.speed2)
         self.addStar()
     def display(self):
         screen.blit(self.draw,(0,0))
         screen.blit(self.draw2,(0,0))
+    def display1(self):
+        screen.blit(self.draw,(gameOffsetX*50,gameOffsetY*50))
+    def display2(self):
+        screen.blit(self.draw2,(gameOffsetX*100,gameOffsetY*100))
 
 class GameRocket(Obj):
     def __init__(self):
@@ -611,9 +617,10 @@ class GameRocket(Obj):
 class EnemyBall(Obj):
     def __init__(self):
         '随机生成速度不同、大小不同的敌人球'
-        size=random.randint(60,150) 
-        self.item = pygame.transform.scale(img_enemy,(size,size))
+        size=random.randint(50,150) 
+        self.item = pygame.transform.scale(img_enemy,(size,size)).convert_alpha()
         super().__init__(self.item,screen)
+        self.item.set_alpha(255*((size)/100)//1)
         self.speed = random.randint(20,50)/10
         self.x = random.randint(0,_.width)
         self.y = -random.randint(0,_.height)
@@ -621,8 +628,9 @@ class EnemyBall(Obj):
     def check_hit(self,x,y):
         self.mask.overlap(gameRocket.mask)
     def update(self):
-        self.y += self.speed
-        if self.y > _.height: self.__init__()
+        self.y += self.speed-gameOffsetY*10
+        if not inRect(self.x,self.y,-self.width,-_.height,_.width,_.height): self.__init__()
+        self.x+=gameOffsetX*10
 
 class EnemyBasket(Obj):
     def __init__(self):
@@ -647,7 +655,7 @@ class GameSys():
         pass
 gameBG = GameBG()
 gameRocket = GameRocket()
-enballs = EnemyList().add(EnemyBall,20)
+enballs = EnemyList().add(EnemyBall,10)
 enbasks = EnemyList().add(EnemyBasket,10)
 fadeInSurface=pygame.surface.Surface((_.width,_.height)).convert_alpha()
 fadeInSurface.set_alpha(255)
@@ -745,19 +753,26 @@ while _.run:
     ######## MAIN GAME ########
     while _.state == 4:
         for event in pygame.event.get():
-            if   event.type == MOUSEMOTION: mouseX,mouseY = event.pos
+            if   event.type == MOUSEMOTION:
+                mouseX,mouseY = event.pos
+                gameOffsetX = gameRocket.x/_.width-0.5
+                gameOffsetY = gameRocket.y/_.height-0.5
             elif event.type == QUIT: _.stop()
             elif event.type == VIDEORESIZE: VideoResized()
             elif event.type == MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_RETURN): pass
-        if gameAnTick<=120:gameRocket.update_fadeIn()#火箭淡入动画
+        if gameAnTick<=120: gameRocket.update_fadeIn()#火箭淡入动画
         else:gameRocket.update()#非淡入火箭动画
         gameBG.update()
         enballs.update()
         
         screen.fill((0,0,0))
-        gameBG.display()
+        gameBG.display1()
         gameRocket.display()
         enballs.display()
+        gameBG.display2()
+        if gameAnTick<=120:
+            screen.blit(fadeInSurface,(0,0))
+            fadeInSurface.set_alpha(255-255*gameAnTick/120)
         pygame.display.flip()
         _.tick()
         gameAnTick+=1
