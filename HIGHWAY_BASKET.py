@@ -105,8 +105,8 @@ imgPath     = './HIGHWAY_ASSETS/IMAGE/'
 img_title   = pygame.image.load(imgPath+'TITLE.png'     ).convert_alpha()
 img_highway = pygame.image.load(imgPath+'HighWAY!.png'  ).convert_alpha()
 img_ball    = pygame.image.load(imgPath+'BALL.png'      ).convert_alpha()
-img_innerBall=pygame.image.load(imgPath+'SMALLBALL.png' ).convert_alpha()
-img_outerBall=pygame.image.load(imgPath+'BIGBALL.png'   ).convert_alpha()
+img_inBall  = pygame.image.load(imgPath+'SMALLBALL.png' ).convert_alpha()
+img_outBall = pygame.image.load(imgPath+'BIGBALL.png'   ).convert_alpha()
 img_about   = pygame.image.load(imgPath+'ABOUT.png'     ).convert_alpha()
 img_bg01    = pygame.image.load(imgPath+'BG01.png'      ).convert_alpha()
 img_bg02    = pygame.image.load(imgPath+'BG02.png'      ).convert_alpha()
@@ -116,6 +116,7 @@ img_bg05    = pygame.image.load(imgPath+'BG05.png'      ).convert_alpha()
 img_rocket1 = pygame.image.load(imgPath+'ROCKET1.png'   ).convert_alpha()
 img_rocket2 = pygame.image.load(imgPath+'ROCKET2.png'   ).convert_alpha()
 img_enemy   = pygame.image.load(imgPath+'ENEMY.png'     ).convert_alpha()
+img_boom    = pygame.image.load(imgPath+'BOOM.png'      ).convert_alpha()
 del imgPath
 
 # 导入字体
@@ -248,7 +249,7 @@ text_start_width = text_start.get_width()
 #######################
 class SmallBall(Obj):
     '内圈篮球'
-    def __init__(self,item=img_innerBall,screen=screen):
+    def __init__(self,item=img_inBall,screen=screen):
         super().__init__(item,screen)
         self.oitem=item
         self.update_videoResized()
@@ -266,7 +267,7 @@ class SmallBall(Obj):
         self.y=self.aimY-rCenter[1]
     def update_videoResized(self):
         '使内圈符合屏幕高度'
-        self.oitem=pygame.transform.scale(img_innerBall,(_.height,_.height))#.convert_alpha()
+        self.oitem=pygame.transform.scale(img_inBall,(_.height,_.height))#.convert_alpha()
         self.aimX,self.aimY=_.width/2,_.height/2
         self.temp=_.width
     def update_fadeIn(self):
@@ -281,7 +282,7 @@ class SmallBall(Obj):
 
 class BigBall(Obj):
     '外圈HIGHWAY'
-    def __init__(self,item=img_outerBall,screen=screen):
+    def __init__(self,item=img_outBall,screen=screen):
         super().__init__(item,screen)
         self.oitem=item
         self.update_videoResized()
@@ -299,7 +300,7 @@ class BigBall(Obj):
         self.y=self.aimY-rCenter[1]
     def update_videoResized(self):
         '使外圈符合屏幕宽'
-        self.oitem=pygame.transform.scale(img_outerBall,(_.width,_.width))#.convert_alpha()
+        self.oitem=pygame.transform.scale(img_outBall,(_.width,_.width))#.convert_alpha()
         self.aimX,self.aimY=_.width/2,_.height/2
         self.temp=_.width
     def update_fadeIn(self):
@@ -600,6 +601,7 @@ class GameRocket(Obj):
         super().__init__(self.item,screen)
         self.x = (_.width-self.width)//2
         self.y = _.height
+        self.mask = pygame.mask.from_surface(self.item,threshold=0)#解决问题：无法准确识别碰撞
     def update(self):
         self.fram = self.fram+1 if self.fram < 19 else 0
         self.item = self.items[self.fram // 10]
@@ -624,10 +626,22 @@ class EnemyBall(Obj):
         self.speed = random.randint(20,50)/10
         self.x = random.randint(0,_.width)
         self.y = -random.randint(0,_.height)
-        self.mask = pygame.mask.from_surface(self.item)
-    def check_hit(self,x,y):
-        self.mask.overlap(gameRocket.mask)
+        self.mask = pygame.mask.from_surface(self.item,threshold=0)
+        self.respawnDelay=30
+        self.respawn=False
+    def check_hit(self):
+        offset=self.x-gameRocket.x, self.y-gameRocket.y
+        return gameRocket.mask.overlap(self.mask,offset)#非矩形碰撞检测
+    def boom(self):
+        print('BOOM',time.time())
+        self.item = img_boom
+        super().__init__(self.item,screen,x=self.x,y=self.y)
+        self.respawn=True
     def update(self):
+        if self.respawn:
+            self.respawnDelay -= 1
+            if self.respawnDelay == 0:
+                enballs.remove(self)
         self.y += self.speed-gameOffsetY*10
         if not inRect(self.x,self.y,-self.width,-_.height,_.width,_.height): self.__init__()
         self.x+=gameOffsetX*10
@@ -650,9 +664,19 @@ class EnemyList(list):
         for i in self: i.update()
     def display(self):
         for i in self: i.display()
+    def check_hit(self):
+        for i in self:
+            hit = i.check_hit()
+            if hit:
+                i.boom()
+                return True
+            else:
+                return False
 class GameSys():
     def __init__():
-        pass
+        self.life=10
+        self.far=0
+        self.bullet=0
 gameBG = GameBG()
 gameRocket = GameRocket()
 enballs = EnemyList().add(EnemyBall,10)
@@ -764,6 +788,7 @@ while _.run:
         else:gameRocket.update()#非淡入火箭动画
         gameBG.update()
         enballs.update()
+        enballs.check_hit()
         
         screen.fill((0,0,0))
         gameBG.display1()
