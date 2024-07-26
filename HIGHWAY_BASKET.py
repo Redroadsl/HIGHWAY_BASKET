@@ -38,8 +38,9 @@ _wish_=\
 #Import
 import logging
 logging.basicConfig(level=logging.NOTSET)
-logging.disable(level=False)
-logging.info('START!')
+logging.disable(level=logging.DEBUG)#False
+info,debug,warning,error=logging.info,logging.debug,logging.warning,logging.error
+info('Loading library...')
 import time,math,random,os
 from sys import exit
 from ctypes import windll
@@ -49,7 +50,7 @@ del os
 import pygame
 from pygame.locals import *
 from pygame._sdl2 import messagebox
-logging.debug('Import finished.')
+info('Library loaded.')
 
 # 设置类
 class _():
@@ -65,11 +66,11 @@ class _():
     def stop():
         _.state=0
         _.run=0
-        logging.info('STOP!')
+        info('STOP!')
     def changeScreenSize():
         global screen
         size=pygame.display.get_window_size()
-        logging.debug('VideoResized:('+str(_.width)+','+str(_.height)+') -> '+str(size))
+        debug('VideoResized:('+str(_.width)+','+str(_.height)+') -> '+str(size))
         _.width=size[0]
         _.height=size[1]
 ##        pygame.display.set_caption('HIGHWAY BASKET','HIGHWAY BASKET')
@@ -98,9 +99,11 @@ pygame.init()
 pygame.display.set_caption('HIGHWAY BASKET','HIGHWAY BASKET')
 screen=pygame.display.set_mode((_.width,_.height),RESIZABLE|DOUBLEBUF|HWSURFACE)#|FULLSCREEN)#SCALED|FULLSCREEN
 pygame.key.set_repeat(100,100)
-if pygame.get_init(): logging.debug('Pygame initialized.')
+if pygame.get_init(): debug('Pygame initialized.')
 
+info('Start loading assets.')
 # 导入图片
+debug('Loading images...')
 imgPath     = './HIGHWAY_ASSETS/IMAGE/'
 img_title   = pygame.image.load(imgPath+'TITLE.png'     ).convert_alpha()
 img_highway = pygame.image.load(imgPath+'HighWAY!.png'  ).convert_alpha()
@@ -120,6 +123,7 @@ img_boom    = pygame.image.load(imgPath+'BOOM.png'      ).convert_alpha()
 del imgPath
 
 # 导入字体
+debug('loading fonts...')
 fontPath    = './HIGHWAY_ASSETS/FONTS/'
 font_en     = pygame.font.Font(fontPath+'FIXEDSYS.TTF' ,size=12)
 font_en_small=pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=36)
@@ -130,6 +134,7 @@ fontHeight_cn=font_cn.get_height()
 del fontPath
 
 # 导入音频
+debug('loading sounds...')
 pygame.mixer.init()
 sePath='./HIGHWAY_ASSETS/AUDIO/'
 se_exam=pygame.mixer.Sound(sePath+'EXAM.WAV')
@@ -140,13 +145,15 @@ def inRect(x,y,ax,ay,bx,by):
     return True if (ax <= x <= bx and ay <= y <= by) else False
 def inRect2(pos1,pos2,pos3):
     return True if (pos2[0] <= pos1[0] <= pos3[0] and pos2[1] <= pos1[1] <= pos3[1]) else False
-def hideMouse():
-    pygame.mouse.set_visible(False)
-def showMouse():
-    pygame.mouse.set_visible(True)
+def setMouse(show=True,grab=False):
+    pygame.mouse.set_visible(show)
+    pygame.event.set_grab(grab)
+info('Assets loaded.')
 ################################
 ######## TITLE场合的设置 ########
 ################################
+info('Start loading Objects.')
+debug('1 title')
 class Title(Obj):
     '“BASKET”标题'
     def __init__(self,item=img_title,screen=screen):
@@ -247,6 +254,7 @@ text_start_width = text_start.get_width()
 #######################
 ######## ABOUT ########
 #######################
+debug('2 about')
 class SmallBall(Obj):
     '内圈篮球'
     def __init__(self,item=img_inBall,screen=screen):
@@ -336,6 +344,7 @@ aboutImg = AboutImage()
 ###########################
 ######## BEFOREGAME #######
 ###########################
+debug('3 beforeGame')
 class Animate(object):
     '时序动画'
     def __init__(self):
@@ -564,9 +573,10 @@ animate.init(\
 ###########################
 ######## MAIN GAME ########
 ###########################
+debug('4 mainGame')
 # Debug
 if _.state==4:
-    hideMouse()
+    setMouse(show=False,grab=True)
 # /DEBUG
 gameOffsetX=0.5#小动画率
 gameOffsetY=0.5
@@ -684,6 +694,8 @@ enbasks = EnemyList().add(EnemyBasket,10)
 fadeInSurface=pygame.surface.Surface((_.width,_.height)).convert_alpha()
 fadeInSurface.set_alpha(255)
 gameAnTick = 0
+
+info('Objects loaded.')
 #############################
 ######## LOOPPREPARE ########
 #############################
@@ -700,6 +712,7 @@ def VideoResized():
     NEXT.update_videoResized()
 mouseX,mouseY=(0,0)
 # 创建主循环
+info('Game Loop Start!')
 while _.run:
     ######## TITLE ########
     while _.state == 1:
@@ -783,7 +796,7 @@ while _.run:
                 gameOffsetY = gameRocket.y/_.height-0.5
             elif event.type == QUIT: _.stop()
             elif event.type == VIDEORESIZE: VideoResized()
-            elif event.type == MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_RETURN): pass
+            elif event.type == MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_ESCAPE): print('Pause')
         if gameAnTick<=120: gameRocket.update_fadeIn()#火箭淡入动画
         else:gameRocket.update()#非淡入火箭动画
         gameBG.update()
