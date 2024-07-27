@@ -38,7 +38,7 @@ _wish_=\
 #Import
 import logging
 logging.basicConfig(level=logging.NOTSET)
-logging.disable(level=logging.DEBUG)#False
+logging.disable(False)#level=logging.DEBUG)#False
 info,debug,warning,error=logging.info,logging.debug,logging.warning,logging.error
 info('Loading library...')
 import time,math,random,os
@@ -125,8 +125,8 @@ del imgPath
 # 导入字体
 debug('loading fonts...')
 fontPath    = './HIGHWAY_ASSETS/FONTS/'
-font_en     = pygame.font.Font(fontPath+'FIXEDSYS.TTF' ,size=12)
-font_en_small=pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=36)
+font_en     = pygame.font.Font(fontPath+'FONT_EN.OTF'  ,size=64)
+font_en_small=pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=20)
 font_cn     = pygame.font.Font(fontPath+'华文中宋.TTF'  ,size=60)
 font_cn_big = pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=72)
 fontHeight_en=font_en.get_height()
@@ -645,7 +645,7 @@ class EnemyBall(Obj):
         offset=(self.x-gameRocket.x, self.y-gameRocket.y)
         return gameRocket.mask.overlap(self.mask,offset)#非矩形碰撞检测
     def boom(self):
-        if not self.respawn: gameSys.life -= 1
+        if not self.respawn: gameSys.setLife()
         self.item = img_boom
         super().__init__(self.item,screen,x=self.x,y=self.y)
         self.respawn=True
@@ -689,17 +689,27 @@ class EnemyList(list):
 class GameSys(object):
     def __init__(self):
         self.life=10
-        self.far=0
+        self.dist=0
         self.bullet=0
+        self.text_life = font_en.render('LIFE: '+str(self.life),False,(255,255,255))
+        self.text_dist = font_en.render('DIST: '+str(self.dist),False,(255,255,255))
     def update(self):
-        if self.life == 0: #生命不足时失败
-            print('FAIL!')
-            _.state = 0
-            _.run = False
+        if self.life == 0: _.stop() #生命不足时失败
+        self.dist -= gameOffsetY*100
+        self.text_dist =font_en.render('SCORE: '+str(int(self.dist)),False,(255,255,255))
+    def setLife(self,num=-1):
+        self.life -= 1
+        self.text_life = font_en.render('LIFE: '+str(self.life),False,(255,255,255))
+    def display(self):
+        screen.blit(self.text_dist,(10,0))
+        screen.blit(self.text_life,(10,fontHeight_en))
+    def initGame(self):
+        pass
+        
 gameSys = GameSys()
 gameBG = GameBG()
 gameRocket = GameRocket()
-enballs = EnemyList().add(EnemyBall,10)
+enballs = EnemyList().add(EnemyBall,15)
 enbasks = EnemyList().add(EnemyBasket,10)
 fadeInSurface=pygame.surface.Surface((_.width,_.height)).convert_alpha()
 fadeInSurface.set_alpha(255)
@@ -724,6 +734,8 @@ mouseX,mouseY=(0,0)
 # 创建主循环
 info('Game Loop Start!')
 while _.run:
+    if _.state == 0:
+        break
     ######## TITLE ########
     while _.state == 1:
         for event in pygame.event.get():
@@ -820,6 +832,7 @@ while _.run:
         gameRocket.display()
         enballs.display()
         gameBG.display2()
+        gameSys.display()
         if gameAnTick<=120:
             screen.blit(fadeInSurface,(0,0))
             fadeInSurface.set_alpha(255-255*gameAnTick/120)
@@ -837,4 +850,5 @@ while _.run:
         pygame.display.flip()
         _.tick()
 pygame.quit()
+debug('Pygame quited.')
 exit()
