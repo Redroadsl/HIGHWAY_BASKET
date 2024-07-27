@@ -611,12 +611,14 @@ class GameRocket(Obj):
         super().__init__(self.item,screen)
         self.x = (_.width-self.width)//2
         self.y = _.height
-        self.mask = pygame.mask.from_surface(self.item,threshold=0)#解决问题：无法准确识别碰撞
+        self.mask = pygame.mask.from_surface(self.item)#解决问题：无法准确识别碰撞
+        #pygame.image.save(self.mask.to_surface(),'mask.png')
     def update(self):
         self.fram = self.fram+1 if self.fram < 19 else 0
         self.item = self.items[self.fram // 10]
         super().__init__(self.item,screen,x=self.x,y=self.y)
         self.x,self.y = self.x-(self.x-mouseX)//_.speed,self.y-(self.y-mouseY)/_.speed #跟随鼠标
+        self.mask = pygame.mask.from_surface(self.item)
     def update_fadeIn(self):
         self.fram = self.fram+1 if self.fram < 19 else 0
         self.item = self.items[self.fram // 10]
@@ -629,21 +631,21 @@ class GameRocket(Obj):
 class EnemyBall(Obj):
     def __init__(self):
         '随机生成速度不同、大小不同的敌人球'
-        size=random.randint(50,150) 
-        self.item = pygame.transform.scale(img_enemy,(size,size)).convert_alpha()
+        self.size=random.randint(50,150) 
+        self.item = pygame.transform.scale(img_enemy,(self.size,self.size)).convert_alpha()
         super().__init__(self.item,screen)
-        self.item.set_alpha(255*((size)/100)//1)
+        self.item.set_alpha(255*((self.size)/100)//1)
         self.speed = random.randint(20,50)/10
         self.x = random.randint(0,_.width)
         self.y = -random.randint(0,_.height)
-        self.mask = pygame.mask.from_surface(self.item,threshold=0)
+        self.mask = pygame.mask.from_surface(self.item)
         self.respawnDelay=30
         self.respawn=False
     def check_hit(self):
-        offset=self.x-gameRocket.x, self.y-gameRocket.y
+        offset=(self.x-gameRocket.x, self.y-gameRocket.y)
         return gameRocket.mask.overlap(self.mask,offset)#非矩形碰撞检测
     def boom(self):
-        print('BOOM',time.time())
+        if not self.respawn: gameSys.life -= 1
         self.item = img_boom
         super().__init__(self.item,screen,x=self.x,y=self.y)
         self.respawn=True
@@ -651,6 +653,7 @@ class EnemyBall(Obj):
         if self.respawn:
             self.respawnDelay -= 1
             if self.respawnDelay == 0:
+                enballs.add(EnemyBall)
                 enballs.remove(self)
         self.y += self.speed-gameOffsetY*10
         if not inRect(self.x,self.y,-self.width,-_.height,_.width,_.height): self.__init__()
@@ -667,26 +670,33 @@ class EnemyBasket(Obj):
 
 class EnemyList(list):
     '储存敌人的列表，批量操作。'
-    def add(self,item,num=10):
-        for i in range(num): self.append(item())
+    def add(self,item,num=1):
+        for i1 in range(num): self.append(item())
         return self
     def update(self):
-        for i in self: i.update()
+        for i2 in self: i2.update()
     def display(self):
-        for i in self: i.display()
+        for i3 in self: i3.display()
     def check_hit(self):
-        for i in self:
-            hit = i.check_hit()
-            if hit:
-                i.boom()
-                return True
-            else:
-                return False
-class GameSys():
-    def __init__():
+        pass #不能在类内部遍历！列表已改变！
+##        for i4 in self:
+##            hit = i4.check_hit()
+##            if hit:
+##                i4.boom()
+##                return True
+##            else:
+##                return False
+class GameSys(object):
+    def __init__(self):
         self.life=10
         self.far=0
         self.bullet=0
+    def update(self):
+        if self.life == 0: #生命不足时失败
+            print('FAIL!')
+            _.state = 0
+            _.run = False
+gameSys = GameSys()
 gameBG = GameBG()
 gameRocket = GameRocket()
 enballs = EnemyList().add(EnemyBall,10)
@@ -801,7 +811,9 @@ while _.run:
         else:gameRocket.update()#非淡入火箭动画
         gameBG.update()
         enballs.update()
-        enballs.check_hit()
+        for item in enballs:
+            if item.check_hit(): item.boom()
+        gameSys.update() #游戏系统变量更新
         
         screen.fill((0,0,0))
         gameBG.display1()
