@@ -575,8 +575,6 @@ animate.init(\
 ######## MAIN GAME ########
 ###########################
 debug('4 mainGame')
-gameOffsetX=0.5#小动画率
-gameOffsetY=0.5
 class GameBG():
     '滚动星空背景'
     def __init__(self):
@@ -591,7 +589,7 @@ class GameBG():
         self.draw2.set_at((random.randint(0,_.width),self.speed2),(255,255,255))
     def update(self):
         '滚动画布，添加星星'
-        #self.speed2=int(3*(gameOffsetY+0.5))
+        #self.speed2=int(3*(gameSys.offsetY+0.5))
         self.draw.scroll(dx=0,dy=self.speed)
         self.draw2.scroll(dx=0,dy=self.speed2)
         self.addStar()
@@ -600,10 +598,10 @@ class GameBG():
 ##        screen.blit(self.draw2,(0,0))
     def display1(self):
         '显示底下的图层'
-        screen.blit(self.draw,(gameOffsetX*50+gameSys.shakeX,gameOffsetY*50+gameSys.shakeY))
+        screen.blit(self.draw,(gameSys.offsetX*50+gameSys.shakeX,gameSys.offsetY*50+gameSys.shakeY))
     def display2(self):
         '显示上面的图层'
-        screen.blit(self.draw2,(gameOffsetX*100+gameSys.shakeX*2,gameOffsetY*100+gameSys.shakeY*2))
+        screen.blit(self.draw2,(gameSys.offsetX*100+gameSys.shakeX*2,gameSys.offsetY*100+gameSys.shakeY*2))
 
 class GameRocket(Obj):
     '玩家可操控的火箭'
@@ -667,9 +665,9 @@ class EnemyBall(Obj):
                 gameSys.shake_done()#视角摇晃重置
                 enballs.add(EnemyBall)
                 enballs.remove(self)
-        self.y += self.speed-gameOffsetY*10
+        self.y += self.speed-gameSys.offsetY*10
         if not inRect(self.x,self.y,-self.width,-_.height,_.width,_.height): self.__init__()#超出屏幕边界球重置
-        self.x+=gameOffsetX*10
+        self.x+=gameSys.offsetX*10
     def display(self):
         #重写显示方法增加视角晃动
         self.screen.blit(self.item,(self.x+gameSys.shakeX, self.y+gameSys.shakeY))
@@ -713,6 +711,8 @@ class GameSys(object):
         self.text_task = font_small.render('1、达到100,000分',False,(255,255,255))
         self.text_task2 = font_small.render('2、生命值大于0',False,(255,255,255))
         self.text_task_x = _.width-self.text_task.get_width()
+        self.offsetX = 0.5
+        self.offsetY = 0.5
         self.shakeX = 0
         self.shakeY = 0
     def update(self):
@@ -720,7 +720,8 @@ class GameSys(object):
         if self.life == 0: _.stop() #生命不足时失败
         elif self.dist >= 100000:
             #处理赢了界面：文常开始
-        self.dist -= gameOffsetY*100 -10
+            pass
+        self.dist -= self.offsetY*100 -10
         self.text_dist =font_en.render('SCORE: '+str(int(self.dist)),False,(255,255,255))
     def setLife(self,num=-1):
         '生命值加减'
@@ -772,7 +773,7 @@ def VideoResized():
     NEXT.update_videoResized()
 mouseX,mouseY=_.width//2, _.height//2
 # 创建主循环
-info('Game Loop Start!')
+info('==== GAME LOOP START ====')
 while _.run:
     if _.state == 0:
         break
@@ -854,8 +855,8 @@ while _.run:
         for event in pygame.event.get():
             if   event.type == MOUSEMOTION:
                 mouseX,mouseY = event.pos
-                gameOffsetX = gameRocket.x/_.width-0.5
-                gameOffsetY = gameRocket.y/_.height-0.5
+                gameSys.offsetX = gameRocket.x/_.width-0.5
+                gameSys.offsetY = gameRocket.y/_.height-0.5
             elif event.type == QUIT: _.stop()
             elif event.type == VIDEORESIZE: VideoResized()
             elif event.type == MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_ESCAPE): print('Pause')
@@ -893,6 +894,7 @@ while _.run:
         screen.fill((0,0,0))
         pygame.display.flip()
         _.tick()
+info('==== GAME LOOP STOOP====')
 pygame.quit()
 debug('Pygame quited.')
 exit()
