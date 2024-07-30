@@ -60,7 +60,7 @@ class _():
     speed = 10 #动画速度的除数
     run   = True
     clock = pygame.time.Clock()
-    state = 4 # 0:exit  1:title  2:about  3:beforeGame 4:game 5:exam 6:final
+    state = 3 # 0:exit  1:title  2:about  3:beforeGame 4:game 5:exam 6:final
     def tick():
         _.clock.tick(_.fps)
     def stop():
@@ -494,7 +494,7 @@ class Next(Obj):
         self.y = _.height-self.height
 
 class Rocket(Obj):
-    '海伟的火箭'
+    '海伟的乱撞火箭'
     def __init__(self):
         self.item=img_rocket1
         super().__init__(self.item,screen)
@@ -533,8 +533,9 @@ bSP.init(lines=\
 '篮球男孩海伟也不例外',
 '他有一个大大的梦想',
 '那就是乘坐火箭，在太空漫游...',
-'尽管太空充满了未知，其中不乏凶险',
+'尽管路途充满了未知，其中不乏凶险',
 '他最终豁出去了，为了未来和远方',
+'『诱惑试炼』移动鼠标，躲避篮球'
 ])
 
 animate=Animate()
@@ -566,7 +567,7 @@ animate.init(\
 (1223,0  ):'self.pause(),NEXT.show()',
 (1224,127):'bBG.fadeOut(step=2)',
 (1224,255):'bSP.fadeOut(step=1)',
-(1480,0  ):'hideMouse()',
+(1480,0  ):'gameSys.initGame()',
 (1481,0  ):'_.state=4'
 })
 
@@ -581,6 +582,7 @@ if _.state==4:
 gameOffsetX=0.5#小动画率
 gameOffsetY=0.5
 class GameBG():
+    '滚动星空背景'
     def __init__(self):
         self.draw=pygame.surface.Surface((_.width,_.height))
         self.draw2=pygame.surface.Surface((_.width,_.height),pygame.SRCALPHA)
@@ -588,22 +590,27 @@ class GameBG():
         self.speed = 2
         self.speed2= 3
     def addStar(self):
+        '在画布边缘添加星星'
         self.draw.set_at((random.randint(0,_.width),self.speed),(200,200,200))
         self.draw2.set_at((random.randint(0,_.width),self.speed2),(255,255,255))
     def update(self):
+        '滚动画布，添加星星'
         #self.speed2=int(3*(gameOffsetY+0.5))
         self.draw.scroll(dx=0,dy=self.speed)
         self.draw2.scroll(dx=0,dy=self.speed2)
         self.addStar()
-    def display(self):
-        screen.blit(self.draw,(0,0))
-        screen.blit(self.draw2,(0,0))
+##    def display(self):
+##        screen.blit(self.draw,(0,0))
+##        screen.blit(self.draw2,(0,0))
     def display1(self):
+        '显示底下的图层'
         screen.blit(self.draw,(gameOffsetX*50,gameOffsetY*50))
     def display2(self):
+        '显示上面的图层'
         screen.blit(self.draw2,(gameOffsetX*100,gameOffsetY*100))
 
 class GameRocket(Obj):
+    '玩家可操控的火箭'
     def __init__(self):
         self.fram=0
         self.items = [pygame.transform.scale(img_rocket1,(138,300)),pygame.transform.scale(img_rocket2,(138,300))]
@@ -614,23 +621,26 @@ class GameRocket(Obj):
         self.mask = pygame.mask.from_surface(self.item)#解决问题：无法准确识别碰撞
         #pygame.image.save(self.mask.to_surface(),'mask.png')
     def update(self):
+        '更新图层做到火焰动画，跟随鼠标.'
         self.fram = self.fram+1 if self.fram < 19 else 0
         self.item = self.items[self.fram // 10]
         super().__init__(self.item,screen,x=self.x,y=self.y)
         self.x,self.y = self.x-(self.x-mouseX)//_.speed,self.y-(self.y-mouseY)/_.speed #跟随鼠标
         self.mask = pygame.mask.from_surface(self.item)
     def update_fadeIn(self):
+        '火箭的入场动画'
         self.fram = self.fram+1 if self.fram < 19 else 0
         self.item = self.items[self.fram // 10]
         super().__init__(self.item, screen, x=self.x, y=self.y-(self.y-(_.height-self.height))/_.speed  )
         pygame.mouse.set_pos(self.x,self.y)
+        mouseX,mouseY=self.x,self.y
     def display(self):
         screen.blit(self.item,(self.x,self.y))
 
         
 class EnemyBall(Obj):
     def __init__(self):
-        '随机生成速度不同、大小不同的敌人球'
+        '随机生成速度不同、大小不同的敌人球，创建遮罩层'
         self.size=random.randint(50,150) 
         self.item = pygame.transform.scale(img_enemy,(self.size,self.size)).convert_alpha()
         super().__init__(self.item,screen)
@@ -642,14 +652,17 @@ class EnemyBall(Obj):
         self.respawnDelay=30
         self.respawn=False
     def check_hit(self):
+        '非矩形碰撞检测'
         offset=(self.x-gameRocket.x, self.y-gameRocket.y)
         return gameRocket.mask.overlap(self.mask,offset)#非矩形碰撞检测
     def boom(self):
+        '被撞击后的处理、更换贴图。'
         if not self.respawn: gameSys.setLife()
         self.item = img_boom
         super().__init__(self.item,screen,x=self.x,y=self.y)
         self.respawn=True
     def update(self):
+        '球漂移、处理死亡与再生。'
         if self.respawn:
             self.respawnDelay -= 1
             if self.respawnDelay == 0:
@@ -678,7 +691,8 @@ class EnemyList(list):
     def display(self):
         for i3 in self: i3.display()
     def check_hit(self):
-        pass #不能在类内部遍历！列表已改变！
+        pass
+##      # 不能在类内部遍历！列表已改变！
 ##        for i4 in self:
 ##            hit = i4.check_hit()
 ##            if hit:
@@ -687,6 +701,7 @@ class EnemyList(list):
 ##            else:
 ##                return False
 class GameSys(object):
+    '游戏系统'
     def __init__(self):
         self.life=10
         self.dist=0
@@ -694,18 +709,22 @@ class GameSys(object):
         self.text_life = font_en.render('LIFE: '+str(self.life),False,(255,255,255))
         self.text_dist = font_en.render('DIST: '+str(self.dist),False,(255,255,255))
     def update(self):
+        '游戏逻辑判断'
         if self.life == 0: _.stop() #生命不足时失败
         self.dist -= gameOffsetY*100
         self.text_dist =font_en.render('SCORE: '+str(int(self.dist)),False,(255,255,255))
     def setLife(self,num=-1):
+        '生命值加减'
         self.life -= 1
         self.text_life = font_en.render('LIFE: '+str(self.life),False,(255,255,255))
     def display(self):
+        '显示生命值、里程文本'
         screen.blit(self.text_dist,(10,0))
         screen.blit(self.text_life,(10,fontHeight_en))
     def initGame(self):
-        pass
-        
+        '游戏重开初始化'
+        setMouse(show=False,grab=True)
+        bSP.change()
 gameSys = GameSys()
 gameBG = GameBG()
 gameRocket = GameRocket()
@@ -730,7 +749,7 @@ def VideoResized():
     bBG.update_videoResized()
     bSP.update_videoResized()
     NEXT.update_videoResized()
-mouseX,mouseY=(0,0)
+mouseX,mouseY=_.width//2, _.height//2
 # 创建主循环
 info('Game Loop Start!')
 while _.run:
@@ -819,8 +838,10 @@ while _.run:
             elif event.type == QUIT: _.stop()
             elif event.type == VIDEORESIZE: VideoResized()
             elif event.type == MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_ESCAPE): print('Pause')
-        if gameAnTick<=120: gameRocket.update_fadeIn()#火箭淡入动画
-        else:gameRocket.update()#非淡入火箭动画
+        if gameAnTick<=120:#淡入动画更新
+            gameRocket.update_fadeIn()#火箭
+        else:
+            gameRocket.update()#非淡入火箭动画
         gameBG.update()
         enballs.update()
         for item in enballs:
@@ -833,9 +854,11 @@ while _.run:
         enballs.display()
         gameBG.display2()
         gameSys.display()
-        if gameAnTick<=120:
-            screen.blit(fadeInSurface,(0,0))
+        if gameAnTick<=120:#淡入动画显示
+            screen.blit(fadeInSurface,(0,0)) #半透明遮罩
             fadeInSurface.set_alpha(255-255*gameAnTick/120)
+            bSP.display() #台词
+            bSP.fadeIn(step=3)
         pygame.display.flip()
         _.tick()
         gameAnTick+=1
