@@ -60,7 +60,7 @@ class _():
     speed = 10 #动画速度的除数
     run   = True
     clock = pygame.time.Clock()
-    state = 3 # 0:exit  1:title  2:about  3:beforeGame 4:game 5:exam 6:final
+    state = 4 # 0:exit  1:title  2:about  3:beforeGame 4:game 5:exam 6:final
     def tick():
         _.clock.tick(_.fps)
     def stop():
@@ -126,7 +126,7 @@ del imgPath
 debug('loading fonts...')
 fontPath    = './HIGHWAY_ASSETS/FONTS/'
 font_en     = pygame.font.Font(fontPath+'FONT_EN.OTF'  ,size=64)
-font_en_small=pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=20)
+font_small=pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=32)
 font_cn     = pygame.font.Font(fontPath+'华文中宋.TTF'  ,size=60)
 font_cn_big = pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=72)
 fontHeight_en=font_en.get_height()
@@ -482,12 +482,12 @@ class Speech(Obj):
 class Next(Obj):
     def __init__(self):
         self.index=0
-        self.item=font_en_small.render('点击屏幕继续',False,(255,255,255),(0,0,0))
+        self.item=font_small.render('点击屏幕继续',False,(255,255,255),(0,0,0))
         super().__init__(self.item,screen)
         self.update_videoResized()
     def show(self):
         self.index = (self.index + 1) % 4
-        self.item=font_en_small.render('点击屏幕继续',False,(0xFF,0xE5,0x00),(0,0,0))
+        self.item=font_small.render('点击屏幕继续',False,(0xFF,0xE5,0x00),(0,0,0))
         screen.blit(self.item,(self.x,self.y))
     def update_videoResized(self):
         self.x = (_.width-self.width)*0.5
@@ -575,10 +575,6 @@ animate.init(\
 ######## MAIN GAME ########
 ###########################
 debug('4 mainGame')
-# Debug
-if _.state==4:
-    setMouse(show=False,grab=True)
-# /DEBUG
 gameOffsetX=0.5#小动画率
 gameOffsetY=0.5
 class GameBG():
@@ -604,10 +600,10 @@ class GameBG():
 ##        screen.blit(self.draw2,(0,0))
     def display1(self):
         '显示底下的图层'
-        screen.blit(self.draw,(gameOffsetX*50,gameOffsetY*50))
+        screen.blit(self.draw,(gameOffsetX*50+gameSys.shakeX,gameOffsetY*50+gameSys.shakeY))
     def display2(self):
         '显示上面的图层'
-        screen.blit(self.draw2,(gameOffsetX*100,gameOffsetY*100))
+        screen.blit(self.draw2,(gameOffsetX*100+gameSys.shakeX*2,gameOffsetY*100+gameSys.shakeY*2))
 
 class GameRocket(Obj):
     '玩家可操控的火箭'
@@ -635,7 +631,8 @@ class GameRocket(Obj):
         pygame.mouse.set_pos(self.x,self.y)
         mouseX,mouseY=self.x,self.y
     def display(self):
-        screen.blit(self.item,(self.x,self.y))
+        #重写显示方法增加视角晃动
+        self.screen.blit(self.item,(self.x+gameSys.shakeX, self.y+gameSys.shakeY))
 
         
 class EnemyBall(Obj):
@@ -665,12 +662,17 @@ class EnemyBall(Obj):
         '球漂移、处理死亡与再生。'
         if self.respawn:
             self.respawnDelay -= 1
+            gameSys.shake()#视角摇晃
             if self.respawnDelay == 0:
+                gameSys.shake_done()#视角摇晃重置
                 enballs.add(EnemyBall)
                 enballs.remove(self)
         self.y += self.speed-gameOffsetY*10
-        if not inRect(self.x,self.y,-self.width,-_.height,_.width,_.height): self.__init__()
+        if not inRect(self.x,self.y,-self.width,-_.height,_.width,_.height): self.__init__()#超出屏幕边界球重置
         self.x+=gameOffsetX*10
+    def display(self):
+        #重写显示方法增加视角晃动
+        self.screen.blit(self.item,(self.x+gameSys.shakeX, self.y+gameSys.shakeY))
 
 class EnemyBasket(Obj):
     def __init__(self):
@@ -702,16 +704,23 @@ class EnemyList(list):
 ##                return False
 class GameSys(object):
     '游戏系统'
-    def __init__(self):
-        self.life=10
-        self.dist=0
-        self.bullet=0
+    def __init__(self,life=10,dist=0,bullet=0):
+        self.life=life
+        self.dist=dist
+        self.bullet=bullet
         self.text_life = font_en.render('LIFE: '+str(self.life),False,(255,255,255))
         self.text_dist = font_en.render('DIST: '+str(self.dist),False,(255,255,255))
+        self.text_task = font_small.render('1、达到100,000分',False,(255,255,255))
+        self.text_task2 = font_small.render('2、生命值大于0',False,(255,255,255))
+        self.text_task_x = _.width-self.text_task.get_width()
+        self.shakeX = 0
+        self.shakeY = 0
     def update(self):
         '游戏逻辑判断'
         if self.life == 0: _.stop() #生命不足时失败
-        self.dist -= gameOffsetY*100
+        elif self.dist >= 100000:
+            #处理赢了界面：文常开始
+        self.dist -= gameOffsetY*100 -10
         self.text_dist =font_en.render('SCORE: '+str(int(self.dist)),False,(255,255,255))
     def setLife(self,num=-1):
         '生命值加减'
@@ -719,13 +728,22 @@ class GameSys(object):
         self.text_life = font_en.render('LIFE: '+str(self.life),False,(255,255,255))
     def display(self):
         '显示生命值、里程文本'
-        screen.blit(self.text_dist,(10,0))
-        screen.blit(self.text_life,(10,fontHeight_en))
+        screen.blit(self.text_dist,(10+gameSys.shakeX,0))
+        screen.blit(self.text_life,(10+gameSys.shakeX,fontHeight_en))
+        screen.blit(self.text_task,(self.text_task_x+gameSys.shakeX,0))
+        screen.blit(self.text_task2,(self.text_task_x+gameSys.shakeX,fontHeight_cn))
+    def shake(self):
+        '视角摇晃动效'
+        self.shakeX=random.choice((-10,0,10))
+        self.shakeY=random.choice((-10,0,10))
+    def shake_done(self):
+        self.shakeX=self.shakeY
     def initGame(self):
         '游戏重开初始化'
         setMouse(show=False,grab=True)
-        bSP.change()
-gameSys = GameSys()
+        if bSP.index == 5:bSP.change()
+        bSP.set_alpha(0)
+gameSys = GameSys(life=15,dist=0,bullet=0)
 gameBG = GameBG()
 gameRocket = GameRocket()
 enballs = EnemyList().add(EnemyBall,15)
@@ -733,7 +751,10 @@ enbasks = EnemyList().add(EnemyBasket,10)
 fadeInSurface=pygame.surface.Surface((_.width,_.height)).convert_alpha()
 fadeInSurface.set_alpha(255)
 gameAnTick = 0
-
+# debug:
+if _.state == 4:
+    bSP.change(add=5)
+    gameSys.initGame()
 info('Objects loaded.')
 #############################
 ######## LOOPPREPARE ########
