@@ -1,4 +1,4 @@
-[English version](#highwaybasket) is in the lower part of the document.
+[English version](#HIGHWAY_BASKET) is in the lower part of the document.
 
 # HIGHWAY_BASKET	海伟篮球
 
