@@ -7,22 +7,21 @@ UsingLibraries: Pygame;logging;sys;math;time;random;ctypes;os
 Licence:        MIT
 '''
 print(__doc__)
-#   #==========================================================================#
-#   |  ####    #####   ####    ####    #####   #####   ####    #####   #       |
-#   |  #   #   #       #   #   #   #   #   #   #   #   #   #   #       #       |
-#   |  ####    #####   #   #   ####    #   #   #####   #   #   #####   #       |
-#   |  #   #   #       #   #   #   #   #   #   #   #   #   #       #   #       |
-#   |  #   #   #####   ####    #   #   #####   #   #   ####    #####   #####   |
-#   #==========================================================================#
-'''
-#              ____ ___   ______  
-#     /     /     /     /        /     /    \     |     |  |\     \    \
-#    /     /     /     /        /     /      \    |\    |  | \     \    \
-#   /_____/     /     /  ____  /_____/        \   | \   |  |  \     \____\
-#  /     /     /     /      / /     /          \  |  \  |  |___\       \
-# /     /     /     /      / /     /            \ |   \ |  |    \       \
-#/     / ____/____ /______/ /     /              \|    \|  |     \       \
-'''
+#    #==========================================================================#
+#    |  ####    #####   ####    ####    #####   #####   ####    #####   #       |
+#    |  #   #   #       #   #   #   #   #   #   #   #   #   #   #       #       |
+#    |  ####    #####   #   #   ####    #   #   #####   #   #   #####   #       |
+#    |  #   #   #       #   #   #   #   #   #   #   #   #   #       #   #       |
+#    |  #   #   #####   ####    #   #   #####   #   #   ####    #####   #####   |
+#    #==========================================================================#
+'''              _______   ______  
+    ##  /     /     /     /        /     /  #  \     |     |  |\     \    \  ##    
+   ##  /     /     /     /        /     /  ###  \    |\    |  | \     \    \  ##   
+  ##  /_____/     /     /  ____  /_____/  ## ##  \   | \   |  |  \     \____\  ##  
+ ##  /     /     /     /      / /     /  ##   ##  \  |  \  |  |___\       \     ## 
+##  /     /     /     /      / /     /  ##     ##  \ |   \ |  |    \       \     ##
+#  /     / ____/____ /______/ /     /  ##       ##  \|    \|  |     \       \     #
+                                                                                '''
 _wish_=\
 '''
     王者风范——严格的标准、高超的水平、智慧的谈吐，“狼王”美名远扬。以眼神的锐利威慑四方，以爪牙的敏捷驰骋山海。
@@ -40,6 +39,7 @@ import logging
 logging.basicConfig(level=logging.NOTSET)
 logging.disable(False)#level=logging.DEBUG)#False
 info,debug,warning,error=logging.info,logging.debug,logging.warning,logging.error
+info('#====| PROGRAME  START |====#')
 info('Loading library...')
 import time,math,random,os
 from sys import exit
@@ -101,7 +101,7 @@ screen=pygame.display.set_mode((_.width,_.height),RESIZABLE|DOUBLEBUF|HWSURFACE)
 pygame.key.set_repeat(100,100)
 if pygame.get_init(): debug('Pygame initialized.')
 
-info('Start loading assets.')
+info('Loading assets...')
 # 导入图片
 debug('Loading images...')
 imgPath     = './HIGHWAY_ASSETS/IMAGE/'
@@ -125,7 +125,7 @@ del imgPath
 # 导入字体
 debug('loading fonts...')
 fontPath    = './HIGHWAY_ASSETS/FONTS/'
-font_en     = pygame.font.Font(fontPath+'FONT_EN.OTF'  ,size=64)
+font_en     = pygame.font.Font(fontPath+'FONT_EN.OTF'  ,size=32)
 font_small=pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=32)
 font_cn     = pygame.font.Font(fontPath+'华文中宋.TTF'  ,size=60)
 font_cn_big = pygame.font.Font(fontPath+'NOTOSANS.OTF' ,size=72)
@@ -152,7 +152,7 @@ info('Assets loaded.')
 ################################
 ######## TITLE场合的设置 ########
 ################################
-info('Start loading Objects.')
+info('Loading Objects...')
 debug('1 title')
 class Title(Obj):
     '“BASKET”标题'
@@ -535,7 +535,7 @@ bSP.init(lines=\
 '那就是乘坐火箭，在太空漫游...',
 '尽管路途充满了未知，其中不乏凶险',
 '他最终豁出去了，为了未来和远方',
-'『诱惑试炼』移动鼠标，躲避篮球'
+'『智恒试炼』移动鼠标，躲避篮球'
 ])
 
 animate=Animate()
@@ -628,6 +628,13 @@ class GameRocket(Obj):
         super().__init__(self.item, screen, x=self.x, y=self.y-(self.y-(_.height-self.height))/_.speed  )
         pygame.mouse.set_pos(self.x,self.y)
         mouseX,mouseY=self.x,self.y
+    def update_fadeOut(self):
+        '火箭的出场动画'
+        self.fram = self.fram+1 if self.fram < 19 else 0
+        self.item = self.items[self.fram // 10]
+        super().__init__(self.item, screen, x=self.x, y=self.y-(self.y-(-self.height))/_.speed  )
+        pygame.mouse.set_pos(self.x,self.y)
+        mouseX,mouseY=self.x,self.y
     def display(self):
         #重写显示方法增加视角晃动
         self.screen.blit(self.item,(self.x+gameSys.shakeX, self.y+gameSys.shakeY))
@@ -648,8 +655,8 @@ class EnemyBall(Obj):
         self.respawn=False
     def check_hit(self):
         '非矩形碰撞检测'
-        offset=(self.x-gameRocket.x, self.y-gameRocket.y)
-        return gameRocket.mask.overlap(self.mask,offset)#非矩形碰撞检测
+        #offset=(self.x-gameRocket.x, self.y-gameRocket.y)
+        if gameRocket.mask.overlap(self.mask,(self.x-gameRocket.x, self.y-gameRocket.y)): self.boom()#非矩形碰撞检测
     def boom(self):
         '被撞击后的处理、更换贴图。'
         if not self.respawn: gameSys.setLife()
@@ -687,7 +694,9 @@ class EnemyList(list):
         for i1 in range(num): self.append(item())
         return self
     def update(self):
-        for i2 in self: i2.update()
+        for i2 in self:
+            i2.update()
+            i2.check_hit()
     def display(self):
         for i3 in self: i3.display()
     def check_hit(self):
@@ -715,12 +724,27 @@ class GameSys(object):
         self.offsetY = 0.5
         self.shakeX = 0
         self.shakeY = 0
+        self.tick = 0
+        self.finish = False
+        self.fadeIn = True
+        self.fadeOut= False
+    def Tick(self):
+        '推进游戏刻'
+        self.tick = self.tick+1
+        if self.tick > 0:
+            self.fadeIn = True if self.tick <= 120 else False
+        else:
+            self.fadeOut= True
+        
     def update(self):
         '游戏逻辑判断'
-        if self.life == 0: _.stop() #生命不足时失败
+        if self.life == 0:
+            pass
+            #_.stop() #生命不足时失败
         elif self.dist >= 100000:
             #处理赢了界面：文常开始
-            pass
+            self.finish = True
+            self.tick = -120
         self.dist -= self.offsetY*100 -10
         self.text_dist =font_en.render('SCORE: '+str(int(self.dist)),False,(255,255,255))
     def setLife(self,num=-1):
@@ -751,7 +775,6 @@ enballs = EnemyList().add(EnemyBall,15)
 enbasks = EnemyList().add(EnemyBasket,10)
 fadeInSurface=pygame.surface.Surface((_.width,_.height)).convert_alpha()
 fadeInSurface.set_alpha(255)
-gameAnTick = 0
 # debug:
 if _.state == 4:
     bSP.change(add=5)
@@ -773,7 +796,7 @@ def VideoResized():
     NEXT.update_videoResized()
 mouseX,mouseY=_.width//2, _.height//2
 # 创建主循环
-info('==== GAME LOOP START ====')
+info('#====| GAME LOOP START |====#')
 while _.run:
     if _.state == 0:
         break
@@ -860,41 +883,46 @@ while _.run:
             elif event.type == QUIT: _.stop()
             elif event.type == VIDEORESIZE: VideoResized()
             elif event.type == MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_ESCAPE): print('Pause')
-        if gameAnTick<=120:#淡入动画更新
-            gameRocket.update_fadeIn()#火箭
+
+        # 更新部分
+        if gameSys.fadeIn:#淡入动画更新
+            gameRocket.update_fadeIn()#火箭淡入动画
+        elif gameSys.fadeOut:
+            gameRocket.update_fadeOut()#火箭淡出动画
         else:
             gameRocket.update()#非淡入火箭动画
         gameBG.update()
         enballs.update()
-        for item in enballs:
-            if item.check_hit(): item.boom()
         gameSys.update() #游戏系统变量更新
-        
+
+        # 显示部分
         screen.fill((0,0,0))
-        gameBG.display1()
-        gameRocket.display()
-        enballs.display()
-        gameBG.display2()
-        gameSys.display()
-        if gameAnTick<=120:#淡入动画显示
-            screen.blit(fadeInSurface,(0,0)) #半透明遮罩
-            fadeInSurface.set_alpha(255-255*gameAnTick/120)
-            bSP.display() #台词
-            bSP.fadeIn(step=3)
+        gameBG.display1()#星空图层1
+        gameRocket.display()#火箭
+        enballs.display()#敌人球
+        gameBG.display2()#星空图层2
+        gameSys.display()#HUD显示
+        if gameSys.fadeIn:#淡入动画显示
+            screen.blit(fadeInSurface,(0,0))#半透明遮罩
+            fadeInSurface.set_alpha(255-255*gameSys.tick/120)#淡入遮罩
+            bSP.display()#台词
+            bSP.fadeIn(step=3)#台词淡入
+        elif gameSys.fadeOut:#淡出动画显示
+            screen.blit(fadeInSurface,(0,0))
+            fadeInSurface.set_alpha(255*(120+gameSys.tick)/120)
         pygame.display.flip()
         _.tick()
-        gameAnTick+=1
+        gameSys.Tick()
     ######## EXAMINATION ########
     while _.state == 5:
         for event in pygame.event.get():
-            if event.type == QUIT: _.stop()
-            elif event.type==VIDEORESIZE: VideoResized()
-            elif event.type==MOUSEBUTTONUP or (event.type==KEYUP and event.key==K_RETURN):
-                pass
+            if   event.type == MOUSEMOTION: pass
+            elif   event.type == QUIT: _.stop()
+            elif event.type == VIDEORESIZE: VideoResized()
         screen.fill((0,0,0))
         pygame.display.flip()
         _.tick()
-info('==== GAME LOOP STOOP====')
+info('#====| GAME LOOP STOP  |====#')
 pygame.quit()
 debug('Pygame quited.')
 exit()
