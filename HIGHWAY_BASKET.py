@@ -817,7 +817,7 @@ while _.run:
                 for ball in flyBallList: ball.update_quit()
                 title.update_quit()
                 highway.update_quit()
-                titleTextOffsetY = -title.y//2
+                titleTextOffsetY = -title.y//3
             elif highway.crazyRange < 120: highway.update_crazy() #完成退出动画后海伟乱动
             else: _.state=3 #真正退出
         else: #   正常处理   #
