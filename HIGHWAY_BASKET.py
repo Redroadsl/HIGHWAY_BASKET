@@ -60,7 +60,7 @@ class _():
     speed = 10 #动画速度的除数
     run   = True
     clock = pygame.time.Clock()
-    state = 4 # 0:exit  1:title  2:about  3:beforeGame 4:game 5:exam 6:final
+    state = 1 # 0:exit  1:title  2:about  3:beforeGame 4:game 5:exam 6:final
     def tick():
         _.clock.tick(_.fps)
     def stop():
@@ -250,7 +250,7 @@ text_wishes= font_cn.render('[>寄语<]',False,(255,255,255)).convert()
 text_start = font_cn.render('·点击海伟开始·',False,(255,255,255)).convert()
 text_about_width = text_about.get_width()
 text_start_width = text_start.get_width()
-
+titleTextOffsetY = 0
 #######################
 ######## ABOUT ########
 #######################
@@ -817,6 +817,7 @@ while _.run:
                 for ball in flyBallList: ball.update_quit()
                 title.update_quit()
                 highway.update_quit()
+                titleTextOffsetY = -title.y//2
             elif highway.crazyRange < 120: highway.update_crazy() #完成退出动画后海伟乱动
             else: _.state=3 #真正退出
         else: #   正常处理   #
@@ -829,9 +830,9 @@ while _.run:
         for ball in flyBallList: ball.display()
         highway.display()
         title.display()
-        screen.blit(text_wishes,(0, _.height-fontHeight_cn))
-        screen.blit(text_about, (_.width-text_about_width, _.height-fontHeight_cn))
-        screen.blit(text_start,((_.width-text_start_width)/2, _.height-fontHeight_cn))
+        screen.blit(text_wishes,(0, _.height-fontHeight_cn +titleTextOffsetY))
+        screen.blit(text_about, (_.width-text_about_width, _.height-fontHeight_cn +titleTextOffsetY))
+        screen.blit(text_start,((_.width-text_start_width)/2, _.height-fontHeight_cn +titleTextOffsetY))
         pygame.display.flip()
         # 控制帧率 #
         _.tick()
